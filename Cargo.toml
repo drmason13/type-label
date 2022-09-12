@@ -6,3 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[dependencies.derive]
+package = "type-label-derive"
+path = "src/derive"
+version = "0.1.0"  # Same as main version
+
+[workspace]
+members = ["src/derive"]
+
+[dev-dependencies]
+derivative = "2.2.0"

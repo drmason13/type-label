@@ -11,6 +11,11 @@ edition = "2021"
 package = "type-label-derive"
 path = "src/derive"
 version = "0.1.0"  # Same as main version
+optional = true
+
+[features]
+derive = ["dep:derive"]
+default = ["derive"]
 
 [workspace]
 members = ["src/derive"]

@@ -1,5 +1,6 @@
-use type_label::{Label, impl_label};
+use type_label::{impl_label, Label};
 
+#[cfg(feature = "derive")]
 #[derive(Label, Debug)]
 #[label = "foo label"]
 pub struct Foo {}
@@ -16,18 +17,15 @@ pub struct Baz {}
 
 impl_label!(Baz, "baz label");
 
-
 fn assert_label<T: Label>(_: T, expected: &'static str) {
     let actual = <T as Label>::LABEL;
 
     if expected != actual {
-        panic!(
-            "Your result of {} should match the expected result {}",
-            actual, expected
-        )
+        panic!("Your result of {} should match the expected result {}", actual, expected)
     }
 }
 
+#[cfg(feature = "derive")]
 #[test]
 fn derive_label() {
     assert_label(Foo {}, "foo label");

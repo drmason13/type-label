@@ -1,22 +1,12 @@
-/*!
 ## Quick Start Guide
 
-Implement this trait to provide a `Display` appropriate label for your type.
+Implement `Label` to provide a `Display` appropriate label for your type.
 
-This trait can be derived using a single helper attribute:
-```
-# #[cfg(not(feature = "derive"))]
-# use type_label::impl_label;
-# use type_label::Label;
-# #[cfg(feature = "derive")]
+`Label` can be derived using a single helper attribute:
+```rust
 #[derive(Label)]
 #[label = "Label goes here"]
 pub struct Foo {}
-# #[cfg(not(feature = "derive"))]
-# pub struct Foo {}
-
-# #[cfg(not(feature = "derive"))]
-# impl_label!(Foo, "Label goes here");
 
 fn main() {
     println!("{}", Foo::LABEL);
@@ -44,11 +34,7 @@ To put it in other words:
 Let's look at a detailed example, our use case will be some boilerplate for Error Handling
 encouraged/required by libraries such as [error-stack](https://docs.rs/error-stack/latest/error_stack/#crate-philosophy).
 
-```
-# #[cfg(not(feature = "derive"))]
-# use type_label::impl_label;
-# #[allow(dead_code)]
-# use std::error::Error;
+```rust
 // Some types our api involves.
 // there could be many more, but that's enough for this example.
 pub enum ActivityType {
@@ -82,20 +68,17 @@ What's a lazy rust programmer to do...?
 
 Define one error for parsing, generic over what is being parsed.
 
-```
+```rust
 use type_label::Label;
 
 #[derive(Debug)]
 pub struct ParseError<T: Label> {
     // ...
-#    _marker: std::marker::PhantomData<T>,
 }
 ```
 
 Hmm... but how to impl Display...?
-```
-# use std::fmt;
-# pub struct ParseError<T>(T);
+```rust
 impl<T> fmt::Display for ParseError<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "there was an error parsing... T") // :(
@@ -105,17 +88,9 @@ impl<T> fmt::Display for ParseError<T> {
 We could make `T: Display`, but if we *haven't parsed a T* how can we rely on T's implementation of Display?
 
 **Enter type_label**
-```
-# #[cfg(not(feature = "derive"))]
-# use type_label::impl_label;
-# use std::error::Error;
-# use std::str::FromStr;
-# use std::marker::PhantomData;
-# use std::fmt::{self, Display};
-# use derivative::Derivative;
+```rust
 use type_label::Label;
 
-# #[cfg(feature = "derive")]
 #[derive(Label, Debug)]
 #[label = "activity type"]
 pub enum ActivityType {
@@ -123,22 +98,10 @@ pub enum ActivityType {
     Invoke,
     Message,
 }
-# #[cfg(not(feature = "derive"))]
-# #[derive(Debug)]
-# pub enum ActivityType {
-#     Handoff,
-#     Invoke,
-#     Message,
-# }
-# #[cfg(not(feature = "derive"))]
-# impl_label!(ActivityType, "activity type");
 
 // we adjust the ParseError type, to require T: Label
-# #[derive(Derivative)]
-# #[derivative(Debug)]
 pub struct ParseError<T: Label> {
     // we need this this marker to appease the compiler because we aren't "using" T
-#     #[derivative(Debug="ignore")]
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -204,46 +167,3 @@ Prempting this question! It's a really simple crate, there's absolutely nothing 
 Please judge abandoment by unresponded to issues rather than frequency of code changes.
 
 If there are no issues then I'm probably still the only person using it `:')`
-*/
-
-#[cfg(feature = "derive")]
-pub use derive::Label;
-
-/// Define a compile-time string label for your type
-pub trait Label {
-    /// The label your type should have. It's completely static
-    const LABEL: &'static str;
-
-    /// Returns this type's label
-    ///
-    /// The default implementation returns the const [`LABEL`](Self::LABEL), there shouldn't ever be a need to override it
-    fn type_label(&self) -> &'static str {
-        Self::LABEL
-    }
-}
-
-/**
-An alternative macro_rules macro for implementing [`Label`].
-
-Using this and disabling default features will avoid proc_macros, which will help compile times.
-
-# Examples
-
-usage:
-```
-#[macro_use] extern crate type_label;
-// alternatively: use type_label::impl_label;
-
-pub struct Foo {}
-
-impl_label!(Foo, "foo label");
-```
-*/
-#[macro_export]
-macro_rules! impl_label {
-    ($struct:ident, $label:literal) => {
-        impl ::type_label::Label for $struct {
-            const LABEL: &'static str = $label;
-        }
-    };
-}
